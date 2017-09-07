@@ -5,6 +5,24 @@ To install the addon simply point Blender to a [zip](https://github.com/leafar-t
 The addon requires NumPy in your Python installation.
 <p align="center"><img height="200px" src="https://raw.githubusercontent.com/leafar-tb/proc-shrooms/master/images/mushroom.png"></p>
 
+## Installation and Usage
+If you are familiar with Blender, you can probably skip this.
+
+To install the addon, open the User Preferences via *File->User Preferences* (*Ctrl+Alt+u* should work, too).
+There go to the *Add-ons* tab and on the bottom click *Install from File*.
+Now simply point Blender to the [zip](https://github.com/leafar-tb/proc-shrooms/archive/master.zip).
+Finally, you have to activate the addon (still in the *Add-ons* tab).
+Just find it in the *User* category or using the search bar on the top-left and activate the check box.
+(Note again: The addon requires NumPy in your Python installation.)
+
+To call an operator, hit space in the 3D view and start typing its name, then select it from the the shown suggestions.
+(Operator names are highlighted in *italics* in the following sections.)
+The operator panel will probably appear towards the left.
+There you'll find the settings affecting the operator.
+When the name of a setting is not helpful, try hovering the mouse over a value for a longer explanation.
+Your changes to the settings are directly applied, so you can also play around with them to see what they do.
+(It will use a fresh random seed with each change, so generated results will vary.)
+
 ## Generation
 The first operator is named *Generate Mushroom(s)*.
 You can choose how many and what style of mushroom you want to generate.
