@@ -3,13 +3,11 @@ import mathutils
 import math
 import random
 
-import numpy as np
-
 from math import pi as PI
 from mathutils import Vector
 from .spline import HermiteInterpolator, screw, bevelCircle
-from .util import optional, optionalKey, logTime, makeDiffuseMaterial, mergeMeshPydata
-
+from .util import optional, optionalKey, logTime, makeDiffuseMaterial, mergeMeshPydata, clip
+from notnum import linspace
 
 class MushroomProps:
     h0 = bpy.props.FloatProperty(
@@ -174,7 +172,7 @@ class Mushroom:
             rnLOD = 8 #LODp//2
             r_noise = [random.uniform(.9, 1.1) for _ in range(rnLOD-1)]
             r_noise.append(r_noise[0])
-            r_noise = HermiteInterpolator(np.linspace(0, 2*PI, rnLOD), r_noise, (0,)*rnLOD)
+            r_noise = HermiteInterpolator(linspace(0, 2*PI, rnLOD), r_noise, (0,)*rnLOD)
         else:
             r_noise = None
         
@@ -208,7 +206,7 @@ class Mushroom:
         props = properties(MushroomProps)
         nprops = len(props)
         
-        nmutations = np.clip(round(random.gauss(nprops*radiation/200, math.sqrt(nprops))), 1, nprops)
+        nmutations = clip(round(random.gauss(nprops*radiation/200, math.sqrt(nprops))), 1, nprops)
         mutatingProps = random.sample(props.items(), nmutations)
         radiation /= math.sqrt(nmutations) # the more aspects change, the less each of them changes
         
@@ -396,11 +394,10 @@ def propClamp(value, prop, soft=False):
     from numbers import Integral, Real
     minv = optionalKey(prop, "soft_min" if soft else "min", value)
     maxv = optionalKey(prop, "soft_max" if soft else "max", value)
-    # numpy types don't mix well with Blender's Vectors, so we convert back
     if isinstance(value, Integral):
-        return int(np.clip(value, minv, maxv))
+        return clip(value, minv, maxv)
     if isinstance(value, Real):
-        return float(np.clip(value, minv, maxv))
+        return clip(value, minv, maxv)
     if prop["type"] is bpy.props.FloatVectorProperty:
-        return list(np.clip(value, minv, maxv).astype(float))
+        return list(clip(val, minv, maxv) for val in value)
     raise Exception("Property type "+str(type(value))+" not yet supported.")

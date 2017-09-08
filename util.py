@@ -10,6 +10,9 @@ def logTime(func, *args, **kwargs):
         return result
     return wrapped
 
+def clip(val, lo, hi):
+    return min(hi, max(lo, val))
+
 def optional(value, default):
     """ Returns a given default value, instead of None. """
     if value is not None:

@@ -2,13 +2,16 @@ import bpy
 import mathutils
 from mathutils import Vector
 from math import sin, cos
-import numpy as np
+from math import pi as PI
+
+from .notnum import poly1d, linspace
+from .util import clip
 
 # cubic hermite basis functions
-H30 = np.poly1d([ 2, -3, 0, 1])
-H31 = np.poly1d([ 1, -2, 1, 0])
-H32 = np.poly1d([ 1, -1, 0, 0])
-H33 = np.poly1d([-2,  3, 0, 0])
+H30 = poly1d([ 2, -3, 0, 1])
+H31 = poly1d([ 1, -2, 1, 0])
+H32 = poly1d([ 1, -1, 0, 0])
+H33 = poly1d([-2,  3, 0, 0])
 
 class HermiteInterpolator:
     
@@ -44,7 +47,7 @@ class HermiteInterpolator:
         count = int(count)
         assert count >= 2
         xmin, xmax = min(self.x), max(self.x)
-        return [self( x, nu ) for x in np.linspace(xmin, xmax, count)]
+        return [self( x, nu ) for x in linspace(xmin, xmax, count)]
     
     def sampleStep(self, spacing=.1, nu=0):
         """
@@ -53,7 +56,7 @@ class HermiteInterpolator:
         at least two samples are returned.
         """
         xmin, xmax = min(self.x), max(self.x)
-        return [self( x, nu ) for x in np.linspace(xmin, xmax, max(int((xmax-xmin)/spacing), 2))]
+        return [self( x, nu ) for x in linspace(xmin, xmax, max(int((xmax-xmin)/spacing), 2))]
 
 #############################################
 
@@ -63,7 +66,7 @@ class Bezier:
         self.points = points
     
     def __call__(self, t, nu = 0):
-        t = np.clip(t, 0, 1)
+        t = clip(t, 0, 1)
         
         def casteljau(points):
             if len(points) == 1:
@@ -86,7 +89,7 @@ class Bezier:
         count = int(count)
         assert count >= 2
         deriv = self.derive(nu)
-        return [deriv(t) for t in np.linspace(0, 1, count)]
+        return [deriv(t) for t in linspace(0, 1, count)]
 
 #############################################
 
@@ -114,13 +117,13 @@ def bevelCircle(spline, radius, LODp=8, LODl=10):
         N = T.cross(A).cross(T).normalized() if A.length > 0.0001 else T.orthogonal().normalized() # fallback, as with vanishing curvature the frame fails
         B = T.cross(N).normalized()
         # ... is used to add points in a circle
-        vertices.extend( s.to_3d()+ (sin(phi)*N+cos(phi)*B)*r for phi in np.linspace(0, 2*np.pi, LODp, endpoint=False) )
+        vertices.extend( s.to_3d()+ (sin(phi)*N+cos(phi)*B)*r for phi in linspace(0, 2*PI, LODp, endpoint=False) )
         
         if i1 != None: # nothing to connect for first points
             # sometimes the frame can twist, so we look for the smoothest connection
             # by minimizing the angle between the side edges and the center line
             tmp = [(vertices[i2+o]-vertices[i1]).angle((s-s_pre).xyz)  for o in range(LODp)]
-            offset = int(np.argmin( tmp ))
+            offset = tmp.index(min(tmp)) # argmin
             
             for f in range(LODp):
                 faces.append((i1 + (f+1)%LODp, i1 + f, i2 + (f+offset)%LODp, i2 + (f+offset+1)%LODp))
@@ -144,7 +147,7 @@ def screw(spline, LODr, LODp, normalsDown=False, rScale=None):
     order = -1 if normalsDown else 1
     
     i1 = len(verts) + (LODp-1)*LODr # connect last and first line
-    for angle in np.linspace(0, 2*np.pi, LODp, endpoint=False):
+    for angle in linspace(0, 2*PI, LODp, endpoint=False):
         i2 = len(verts)
         verts.extend(spline.samples(LODr))
         for v in range(i2, i2+LODr):

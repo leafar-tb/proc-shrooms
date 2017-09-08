@@ -2,7 +2,6 @@
 This Blender plugin adds operators for creating procedural mushroom meshes.
 The operators are explained in more detail below.
 To install the addon simply point Blender to a [zip](https://github.com/leafar-tb/proc-shrooms/archive/master.zip) of this repo.
-The addon requires NumPy in your Python installation.
 <p align="center"><img height="200px" src="https://raw.githubusercontent.com/leafar-tb/proc-shrooms/master/images/mushroom.png"></p>
 
 ## Installation and Usage
@@ -13,7 +12,6 @@ There go to the *Add-ons* tab and on the bottom click *Install from File*.
 Now simply point Blender to the [zip](https://github.com/leafar-tb/proc-shrooms/archive/master.zip).
 Finally, you have to activate the addon (still in the *Add-ons* tab).
 Just find it in the *User* category or using the search bar on the top-left and activate the check box.
-(Note again: The addon requires NumPy in your Python installation.)
 
 To call an operator, hit space in the 3D view and start typing its name, then select it from the the shown suggestions.
 (Operator names are highlighted in *italics* in the following sections.)
