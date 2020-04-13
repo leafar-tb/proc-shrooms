@@ -11,7 +11,11 @@ def logTime(func, *args, **kwargs):
     return wrapped
 
 def clip(val, lo, hi):
-    return min(hi, max(lo, val))
+    if val < lo:
+        return lo
+    if val > hi:
+        return hi
+    return val
 
 def optional(value, default):
     """ Returns a given default value, instead of None. """
@@ -28,21 +32,25 @@ def optionalKey(obj, id, default=None, allowGetNone=False):
     """
     try:
         if type(obj) is dict:
-            return obj.__getitem__(id) if allowGetNone else optional(obj.__getitem__(id), default)
+            return obj[id] if allowGetNone else optional(obj[id], default)
         assert type(id) is str, "attribute identifier should be a string"
-        return obj.__getattribute__(id) if allowGetNone else optional(obj.__getattribute__(id), default)
-    except KeyError or AttributeError:
+        return getattr(obj, id) if allowGetNone else optional(getattr(obj, id), default)
+    except (KeyError, AttributeError):
         return default
 
 def linkAndSelect(obj, context=bpy.context):
-    context.scene.objects.link(obj)
+    collection = bpy.data.collections.new("tmp")
+    context.scene.collection.children.link(collection)
+    collection.objects.link(obj)
+
     bpy.ops.object.select_all(action = "DESELECT")
-    obj.select = True
-    context.scene.objects.active = obj
+    obj.select_set(state=True)
+    context.view_layer.objects.active = obj
 
 def makeDiffuseMaterial(col, name="Diffuse"):
+    col = col[:4]
     mat = bpy.data.materials.new(name)
-    mat.diffuse_color = col
+    mat.diffuse_color = tuple(col) + (1,) * (4 - len(col))
     mat.specular_intensity = 0
     return mat
 
@@ -63,3 +71,41 @@ def mergeMeshPydata(*args):
         for i in range(1, len(result)):
             result[i].extend( [idx+offset for idx in idxtup] for idxtup in tup[i] )
     return result
+
+class MeshMerger:
+    """
+    Combine meshes that are present as vertex and face lists (see bpy.types.Mesh.from_pydata).
+    In addition, each of the meshes can be assigned a material.
+    """
+    def __init__(self):
+        self.vertices    = []
+        self.faces       = []
+        self.materialIndices = [0]
+        self.materials   = []
+
+    def add(self, verts, faces, material=None):
+        """Add new vertices and faces. If a material is given, it will be assigned to all the new faces."""
+        self.vertices, self.faces = mergeMeshPydata((self.vertices, self.faces), (verts, faces))
+        self.materialIndices.append(len(self.faces))
+        self.materials.append(material)
+
+    def buildMesh(self, name):
+        """Create a Blender mesh from the previously added data."""
+        newMesh = bpy.data.meshes.new(name)
+        newMesh.from_pydata(self.vertices, [], self.faces)
+        newMesh.update()
+
+        #assert False, (self.materialIndices, len(self.faces))
+        for mat, fromIdx, toIdx in zip(self.materials, self.materialIndices[:-1], self.materialIndices[1:]):
+            if mat is not None:
+                newMesh.materials.append(mat)
+                for p in range(fromIdx, toIdx):
+                    newMesh.polygons[p].material_index = len(newMesh.materials)-1
+        return newMesh
+
+def isIterable(val):
+    try:
+        iter(val)
+        return True
+    except TypeError:
+        return False
